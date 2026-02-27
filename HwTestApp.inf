@@ -1,0 +1,65 @@
+## @file
+#  HwTestApp - UEFI Hardware Test Suite Application Module
+#
+#  Stand-alone UEFI application for pre-OS hardware diagnostics.
+#  Boots from USB, runs automated tests, displays results via GOP UI.
+#
+#  Copyright (c) 2026. All rights reserved.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = HwTestApp
+  FILE_GUID                      = C3D4E5F6-A7B8-9012-CDEF-123456789012
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = UefiMain
+
+[Sources]
+  Src/Main.c
+  Src/Utils/Console.c
+  Src/Utils/Timer.c
+  Src/Utils/String.c
+  Src/Ui/Graphics.c
+  Src/Ui/Menu.c
+  Src/Ui/Progress.c
+  Src/Ui/Results.c
+  Src/Tests/CpuTest.c
+  Src/Tests/MemoryTest.c
+  Src/Tests/StorageTest.c
+  Src/Tests/DisplayTest.c
+  Src/Tests/NetworkTest.c
+  Src/Tests/UsbTest.c
+  Src/Tests/BluetoothTest.c
+  Src/Runner/TestRunner.c
+  Src/Report/Report.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  HwTestPkg/HwTestPkg.dec
+
+[LibraryClasses]
+  UefiApplicationEntryPoint
+  UefiLib
+  UefiBootServicesTableLib
+  UefiRuntimeServicesTableLib
+  BaseLib
+  BaseMemoryLib
+  MemoryAllocationLib
+  PrintLib
+  DebugLib
+  DevicePathLib
+
+[Protocols]
+  gEfiGraphicsOutputProtocolGuid          ## CONSUMES
+  gEfiSimpleTextInputExProtocolGuid       ## CONSUMES
+  gEfiSimpleFileSystemProtocolGuid        ## CONSUMES
+  gEfiBlockIoProtocolGuid                 ## CONSUMES
+  gEfiDiskIoProtocolGuid                  ## CONSUMES
+  gEfiSimpleNetworkProtocolGuid           ## CONSUMES
+  gEfiUsbIoProtocolGuid                   ## CONSUMES
+
+[Guids]
+  gEfiFileInfoGuid
