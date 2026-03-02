@@ -7,8 +7,10 @@
 
 #include "Results.h"
 #include "../Utils/Console.h"
+#include "../Utils/String.h"
 #include <Library/UefiLib.h>
 #include <Library/PrintLib.h>
+#include <Library/BaseMemoryLib.h>
 
 VOID
 EFIAPI
@@ -24,10 +26,15 @@ ResultsShow (
   UINTN Passed = 0;
   UINTN Failed = 0;
   UINTN Skipped = 0;
+  BOOLEAN HasDebugIssue = FALSE;
   CHAR16 Summary[128];
   CHAR16 DurationStr[32];
+  CHAR16 DebugName[HW_TEST_NAME_MAX];
+  CHAR16 DebugDetails[HW_TEST_DETAIL_MAX];
 
   ConsoleGetSize (&Cols, &Rows);
+  DebugName[0] = L'\0';
+  DebugDetails[0] = L'\0';
   ConsoleClear ();
   ConsolePrintHeader ();
 
@@ -77,11 +84,11 @@ ResultsShow (
     UnicodeSPrint (DurationStr, sizeof (DurationStr), L"%lu ms", Res->DurationMs);
     ConsolePrintAt (45, Row, EFI_LIGHTGRAY, CON_BG_DEFAULT, DurationStr);
 
-    // Details (truncated)
+    // Details (wider clip based on screen width)
     {
-      CHAR16 DetailTrunc[30];
+      CHAR16 DetailTrunc[HW_TEST_DETAIL_MAX];
       UINTN  DetailLen = StrLen (Res->Details);
-      UINTN  MaxDetail = 28;
+      UINTN  MaxDetail = (Cols > 60) ? (Cols - 60) : 10;
       UINTN  CopyLen;
 
       if (DetailLen > MaxDetail) {
@@ -92,11 +99,17 @@ ResultsShow (
       CopyMem (DetailTrunc, Res->Details, CopyLen * sizeof (CHAR16));
       DetailTrunc[CopyLen] = L'\0';
 
-      if (Res->Status == TestStatusFail) {
+      if (Res->Status == TestStatusFail || Res->Status == TestStatusError) {
         ConsolePrintAt (58, Row, EFI_RED, CON_BG_DEFAULT, DetailTrunc);
       } else {
         ConsolePrintAt (58, Row, EFI_DARKGRAY, CON_BG_DEFAULT, DetailTrunc);
       }
+    }
+
+    if (!HasDebugIssue && (Res->Status == TestStatusFail || Res->Status == TestStatusError)) {
+      StringSafeCopy (DebugName, sizeof (DebugName), Res->TestName);
+      StringSafeCopy (DebugDetails, sizeof (DebugDetails), Res->Details);
+      HasDebugIssue = TRUE;
     }
 
     Row++;
@@ -117,8 +130,28 @@ ResultsShow (
     ConsolePrintAt (2, Rows - 4, EFI_RED, CON_BG_DEFAULT, Summary);
   }
 
+  if (HasDebugIssue) {
+    CHAR16 DebugLine[HW_TEST_DETAIL_MAX];
+    UINTN  MaxDebugChars;
+
+    ConsolePrintAt (2, Rows - 3, EFI_YELLOW, CON_BG_DEFAULT, L"  Debug [%s]", DebugName);
+
+    MaxDebugChars = (Cols > 14) ? (Cols - 14) : 20;
+    if (MaxDebugChars > (HW_TEST_DETAIL_MAX - 1)) {
+      MaxDebugChars = HW_TEST_DETAIL_MAX - 1;
+    }
+    if (StrLen (DebugDetails) > MaxDebugChars) {
+      CopyMem (DebugLine, DebugDetails, MaxDebugChars * sizeof (CHAR16));
+      DebugLine[MaxDebugChars] = L'\0';
+    } else {
+      StringSafeCopy (DebugLine, sizeof (DebugLine), DebugDetails);
+    }
+
+    ConsolePrintAt (2, Rows - 2, EFI_LIGHTRED, CON_BG_DEFAULT, L"  %s", DebugLine);
+  }
+
   ConsolePrintAt (
-    2, Rows - 2,
+    2, Rows - 1,
     EFI_DARKGRAY, CON_BG_DEFAULT,
     L"  Press any key to return to main menu..."
     );

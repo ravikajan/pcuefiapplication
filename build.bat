@@ -12,11 +12,11 @@ echo.
 REM --- Configuration ---
 REM Set EDK2_PATH to your EDK II checkout directory
 IF NOT DEFINED EDK2_PATH (
-    SET EDK2_PATH=C:\edk2
+    SET EDK2_PATH=E:\Project\edk2
 )
 
 IF NOT DEFINED TOOL_CHAIN_TAG (
-    SET TOOL_CHAIN_TAG=VS2019
+    SET TOOL_CHAIN_TAG=VS2022
 )
 
 SET TARGET=RELEASE
@@ -52,6 +52,11 @@ IF NOT EXIST "%EDK2_PATH%\%PKG_NAME%" (
 
 REM --- Setup EDK II environment ---
 pushd "%EDK2_PATH%"
+set PYTHON_COMMAND=python
+set PATH=%EDK2_PATH%\BaseTools\Bin\Win32;%PATH%
+set EDK_TOOLS_BIN=%EDK2_PATH%\BaseTools\BinWrappers\WindowsLike
+set NASM_PREFIX=C:\Users\ADMIN\AppData\Local\bin\NASM\
+call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" amd64 >nul 2>&1
 call edksetup.bat
 
 REM --- Build ---
@@ -59,7 +64,7 @@ echo.
 echo Building %PKG_NAME%...
 echo.
 
-build -p %PKG_NAME%/%PKG_NAME%.dsc -a %ARCH% -t %TOOL_CHAIN_TAG% -b %TARGET%
+call build -p %PKG_NAME%/%PKG_NAME%.dsc -a %ARCH% -t %TOOL_CHAIN_TAG% -b %TARGET%
 
 IF ERRORLEVEL 1 (
     echo.

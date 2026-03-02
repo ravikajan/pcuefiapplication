@@ -18,6 +18,7 @@
 
 [Sources]
   Src/Main.c
+  Src/Driver/DriverLoader.c
   Src/Utils/Console.c
   Src/Utils/Timer.c
   Src/Utils/String.c
@@ -30,6 +31,7 @@
   Src/Tests/StorageTest.c
   Src/Tests/DisplayTest.c
   Src/Tests/NetworkTest.c
+  Src/Tests/WifiTest.c
   Src/Tests/UsbTest.c
   Src/Tests/BluetoothTest.c
   Src/Runner/TestRunner.c

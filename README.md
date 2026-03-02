@@ -10,7 +10,7 @@ Designed for PC resellers, refurbishers, repair technicians, and IT departments 
 | ------------------------ | --------------------------------------------------------- |
 | **Pre-OS Boot**          | Runs directly on UEFI firmware, no OS needed              |
 | **Interactive UI**       | Keyboard-navigable menus, progress bars, PASS/FAIL badges |
-| **7 Test Modules**       | CPU, Memory, Storage, Display, Network, USB, Bluetooth    |
+| **8 Test Modules**       | CPU, Memory, Storage, Display, Network, WiFi, USB, Bluetooth |
 | **3 Test Profiles**      | Full Test, Quick Test, Custom Selection                   |
 | **Report Export**        | JSON, CSV, TXT reports saved to FAT32 filesystem          |
 | **Modular Architecture** | Easy to add/modify test modules                           |
@@ -22,9 +22,10 @@ Designed for PC resellers, refurbishers, repair technicians, and IT departments 
 | **CPU**       | CPUID vendor detection, integer arithmetic integrity, stress loops |
 | **Memory**    | UEFI memory map enumeration, walking-bit pattern tests             |
 | **Storage**   | Block I/O device enumeration, media info, read verification        |
-| **Display**   | GOP mode listing, resolution info, color fill tests                |
+| **Display**   | GOP mode listing, per-color manual validation, user PASS/FAIL note |
 | **Network**   | Simple Network Protocol detection, MAC, link status                |
-| **USB**       | USB I/O device enumeration, VID/PID listing                        |
+| **WiFi**      | WiFi-capable adapter scan/list and link/connectivity diagnostics    |
+| **USB**       | Interactive USB port check (baseline, plug-in detect, PASS/FAIL)  |
 | **Bluetooth** | Bluetooth HC Protocol detection                                    |
 
 ## Prerequisites
@@ -76,6 +77,25 @@ make_usb.bat E
 
 Where `E` is your USB drive letter.
 
+Optional: download common UEFI network drivers first:
+
+```batch
+download_common_drivers.bat
+```
+
+`make_usb.bat` will copy `Drivers\*.efi` into `EFI\BOOT\DRIVERS` and `EFI\HWTEST\DRIVERS`.
+At startup, the app auto-loads drivers from these folders before running tests.
+
+Offline/local bundle flow (recommended):
+
+```batch
+build_local_bundle.bat
+make_usb.bat E
+```
+
+This uses only local prebuilt driver binaries in `Drivers\`.
+No driver download is performed at boot time.
+
 ### 6. Boot on Real Hardware
 
 1. Insert USB into target PC
@@ -112,6 +132,7 @@ pcuefiapplication/
     │   ├── StorageTest.c  # Storage diagnostics
     │   ├── DisplayTest.c  # Display diagnostics
     │   ├── NetworkTest.c  # Network diagnostics
+    │   ├── WifiTest.c     # WiFi diagnostics
     │   ├── UsbTest.c      # USB diagnostics
     │   └── BluetoothTest.c# Bluetooth diagnostics
     ├── Runner/
@@ -156,7 +177,7 @@ HW_TEST_MODULE gMyTestModule = {
 ├──────────────┤
 │  TestRunner  │  Orchestrates Full/Quick/Custom profiles
 ├──────────────┤
-│ Test Modules │  CPU | Mem | Storage | Display | Net | USB | BT
+│ Test Modules │  CPU | Mem | Storage | Display | Net | WiFi | USB | BT
 ├──────────────┤
 │   Report     │  JSON / CSV / TXT → FAT32 filesystem
 ├──────────────┤

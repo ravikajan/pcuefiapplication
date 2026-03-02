@@ -19,6 +19,7 @@
 #include "Utils/Console.h"
 #include "Utils/Timer.h"
 #include "Utils/String.h"
+#include "Driver/DriverLoader.h"
 #include "Ui/Graphics.h"
 #include "Ui/Menu.h"
 #include "Ui/Progress.h"
@@ -286,6 +287,9 @@ UefiMain (
   MENU_CONTEXT MainMenu;
   BOOLEAN      Running;
   UINTN        Choice;
+  UINTN        DriverLoaded;
+  UINTN        DriverStarted;
+  UINTN        DriverFailed;
 
   // Disable watchdog timer (prevents auto-reset during long tests)
   gBS->SetWatchdogTimer (0, 0, 0, NULL);
@@ -294,6 +298,23 @@ UefiMain (
   {
     EFI_GRAPHICS_OUTPUT_PROTOCOL *Gop;
     GfxInit (&Gop);
+  }
+
+  DriverLoaded = 0;
+  DriverStarted = 0;
+  DriverFailed = 0;
+  DriverLoaderLoadAll (ImageHandle, &DriverLoaded, &DriverStarted, &DriverFailed);
+
+  if (DriverLoaded > 0 || DriverFailed > 0) {
+    ConsoleClear ();
+    ConsolePrintHeader ();
+    ConsolePrintAt (2, 5, CON_COLOR_INFO, CON_BG_DEFAULT,
+      L"Local driver preload (offline): loaded=%d started=%d failed=%d",
+      DriverLoaded,
+      DriverStarted,
+      DriverFailed
+      );
+    TimerDelayMs (1200);
   }
 
   // Initialize test runner
@@ -314,7 +335,7 @@ UefiMain (
     // Build main menu
     MenuInit (&MainMenu, L"Main Menu", FALSE, 4);
     MenuAddItem (&MainMenu, L"Full Test",     L"Run all hardware diagnostic tests", TRUE);
-    MenuAddItem (&MainMenu, L"Quick Test",    L"Run essential tests only (CPU, Memory, Storage, Network, USB)", TRUE);
+    MenuAddItem (&MainMenu, L"Quick Test",    L"Run essential tests only (CPU, Memory, Storage, Network, WiFi, USB)", TRUE);
     MenuAddItem (&MainMenu, L"Custom Test",   L"Select which tests to run", TRUE);
     MenuAddItem (&MainMenu, L"View Results",  L"View results from the last test run", TRUE);
     MenuAddItem (&MainMenu, L"Save Report",   L"Export test results to JSON, CSV, and TXT files", TRUE);

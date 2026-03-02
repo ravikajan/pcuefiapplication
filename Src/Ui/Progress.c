@@ -10,6 +10,7 @@
 #include "Graphics.h"
 #include <Library/UefiLib.h>
 #include <Library/PrintLib.h>
+#include <Library/BaseMemoryLib.h>
 
 // Track test statuses for display
 #define MAX_DISPLAY_TESTS 16

@@ -7,7 +7,9 @@
 
 #include "TestRunner.h"
 #include "../Utils/Timer.h"
+#include "../Utils/String.h"
 #include <Library/BaseMemoryLib.h>
+#include <Library/PrintLib.h>
 
 // External module descriptors from test modules
 extern HW_TEST_MODULE gCpuTestModule;
@@ -16,6 +18,7 @@ extern HW_TEST_MODULE gStorageTestModule;
 extern HW_TEST_MODULE gDisplayTestModule;
 extern HW_TEST_MODULE gNetworkTestModule;
 extern HW_TEST_MODULE gUsbTestModule;
+extern HW_TEST_MODULE gWifiTestModule;
 extern HW_TEST_MODULE gBluetoothTestModule;
 
 // Registered modules
@@ -51,6 +54,7 @@ TestRunnerInit (
   RegisterModule (&gStorageTestModule);
   RegisterModule (&gDisplayTestModule);
   RegisterModule (&gNetworkTestModule);
+  RegisterModule (&gWifiTestModule);
   RegisterModule (&gUsbTestModule);
   RegisterModule (&gBluetoothTestModule);
 }
@@ -89,7 +93,12 @@ RunSingleModule (
   IN  HW_TEST_PROGRESS_CALLBACK  ProgressCb    OPTIONAL
   )
 {
+  EFI_STATUS RunStatus;
+
   ZeroMem (Result, sizeof (HW_TEST_RESULT));
+  StringSafeCopy (Result->TestName, sizeof (Result->TestName), Module->Name);
+  Result->Status = TestStatusSkip;
+  StringSafeCopy (Result->Details, sizeof (Result->Details), L"No details reported");
 
   // Notify UI that test is starting
   if (ProgressCb != NULL) {
@@ -97,7 +106,23 @@ RunSingleModule (
   }
 
   // Run the test
-  Module->Run (Module, Result);
+  RunStatus = Module->Run (Module, Result);
+
+  if (EFI_ERROR (RunStatus)) {
+    CHAR16 ErrorText[64];
+
+    if (Result->Status == TestStatusPass || Result->Status == TestStatusSkip) {
+      Result->Status = TestStatusError;
+    }
+
+    UnicodeSPrint (ErrorText, sizeof (ErrorText), L" | Run error: %r", RunStatus);
+
+    if (Result->Details[0] == L'\0' || StrCmp (Result->Details, L"No details reported") == 0) {
+      UnicodeSPrint (Result->Details, sizeof (Result->Details), L"Run error: %r", RunStatus);
+    } else {
+      StringSafeCat (Result->Details, sizeof (Result->Details), ErrorText);
+    }
+  }
 
   // Notify UI with final status
   if (ProgressCb != NULL) {

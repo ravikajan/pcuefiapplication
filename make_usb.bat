@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableDelayedExpansion
 REM ============================================================
 REM  UEFI Hardware Test Suite - USB Deployment Script
 REM  Copies BOOTX64.EFI to a USB drive for UEFI boot
@@ -24,6 +25,8 @@ IF "%1"=="" (
 
 SET USB_DRIVE=%1:
 SET EFI_BOOT_DIR=%USB_DRIVE%\EFI\BOOT
+SET EFI_DRV_DIR=%USB_DRIVE%\EFI\BOOT\DRIVERS
+SET EFI_APP_DRV_DIR=%USB_DRIVE%\EFI\HWTEST\DRIVERS
 
 REM --- Verify drive exists ---
 IF NOT EXIST "%USB_DRIVE%\" (
@@ -44,6 +47,14 @@ IF NOT EXIST "%EFI_BOOT_DIR%" (
     mkdir "%EFI_BOOT_DIR%"
 )
 
+IF NOT EXIST "%EFI_DRV_DIR%" (
+    mkdir "%EFI_DRV_DIR%"
+)
+
+IF NOT EXIST "%EFI_APP_DRV_DIR%" (
+    mkdir "%EFI_APP_DRV_DIR%"
+)
+
 REM --- Copy the binary ---
 echo Copying HwTestApp.efi to %EFI_BOOT_DIR%\BOOTX64.EFI ...
 copy /Y "%EFI_BIN%" "%EFI_BOOT_DIR%\BOOTX64.EFI"
@@ -58,6 +69,21 @@ echo.
 echo ============================================
 echo   USB DEPLOYMENT COMPLETE
 echo ============================================
+
+REM --- Copy optional driver binaries (recursive) ---
+set DRIVER_FOUND=0
+for /R "%~dp0Drivers" %%F in (*.efi) do (
+    set DRIVER_FOUND=1
+    copy /Y "%%F" "%EFI_DRV_DIR%\" >nul
+    copy /Y "%%F" "%EFI_APP_DRV_DIR%\" >nul
+)
+
+if "!DRIVER_FOUND!"=="0" (
+    echo No optional driver binaries found in %~dp0Drivers
+) else (
+    echo Optional drivers copied to %EFI_DRV_DIR% and %EFI_APP_DRV_DIR%
+)
+
 echo.
 echo   Drive: %USB_DRIVE%
 echo   Path:  %EFI_BOOT_DIR%\BOOTX64.EFI
@@ -69,3 +95,5 @@ echo   3. Disable Secure Boot (if enabled)
 echo   4. Select the USB drive as boot device
 echo   5. The Hardware Test Suite will start automatically
 echo.
+
+endlocal

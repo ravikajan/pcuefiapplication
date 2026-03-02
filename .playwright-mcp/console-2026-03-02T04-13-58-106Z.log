@@ -1,0 +1,4 @@
+[     820ms] [WARNING] useTranslation: DISMISS is not available @ https://duckduckgo.com/dist/wpm.main.21128e0cdfd54fe204e7.js:0
+[    1721ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://external-content.duckduckgo.com/ip3/h10032.www1.hp.com.ico:0
+[    1732ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://external-content.duckduckgo.com/ip3/edc.intel.com.ico:0
+[    1835ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://external-content.duckduckgo.com/ip3/uefi.org.ico:0
